@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Weather App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Oswald', sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            transition: background 2s ease-in-out;
+        }
+
+        .weather-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .search-container {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 15px 25px;
+            color: white;
+            font-size: 16px;
+            width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-box:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .weather-info {
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .city-name {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .temperature {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .weather-description {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-transform: capitalize;
+            opacity: 0.9;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Weather-specific backgrounds */
+        .sunny {
+            background: linear-gradient(135deg, #000 0%, #1a1a2e 50%, #16213e 100%);
+        }
+
+        .cloudy {
+            background: linear-gradient(135deg, #000 0%, #2c2c54 50%, #40407a 100%);
+        }
+
+        .rainy {
+            background: linear-gradient(135deg, #000 0%, #0f3460 50%, #0e4b99 100%);
+        }
+
+        .snowy {
+            background: linear-gradient(135deg, #000 0%, #2c3e50 50%, #34495e 100%);
+        }
+
+        .stormy {
+            background: linear-gradient(135deg, #000 0%, #2f1b69 50%, #8e44ad 100%);
+        }
+
+        /* Animated weather effects */
+        .weather-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Rain animation */
+        .rain-drop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+            animation: rainFall 1s linear infinite;
+        }
+
+        @keyframes rainFall {
+            0% { top: -20px; opacity: 1; }
+            100% { top: 100vh; opacity: 0; }
+        }
+
+        /* Snow animation */
+        .snow-flake {
+            position: absolute;
+            color: white;
+            font-size: 1rem;
+            animation: snowFall 3s linear infinite;
+        }
+
+        @keyframes snowFall {
+            0% { 
+                top: -10px; 
+                opacity: 1;
+                transform: translateX(0px);
+            }
+            100% { 
+                top: 100vh; 
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        /* Stars animation for clear nights */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* Lightning animation */
+        .lightning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            animation: flash 0.1s ease-in-out;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* Clouds animation */
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            animation: cloudMove 20s linear infinite;
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+        }
+
+        .cloud-1 {
+            width: 100px;
+            height: 40px;
+            top: 20%;
+            left: -100px;
+        }
+
+        .cloud-1::before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }
+
+        .cloud-1::after {
+            width: 60px;
+            height: 30px;
+            top: -15px;
+            right: 10px;
+        }
+
+        @keyframes cloudMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            font-size: 1.5rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            .city-name { font-size: 2rem; }
+            .temperature { font-size: 3.5rem; }
+            .weather-description { font-size: 1.4rem; }
+            .weather-details { gap: 20px; }
+            .search-box { width: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" class="search-box" placeholder="Enter city name..." id="cityInput">
+    </div>
+
+    <div class="weather-animation" id="weatherAnimation"></div>
+
+    <div class="weather-container">
+        <div class="weather-info" id="weatherInfo">
+            <div class="loading">Enter a city name to get weather information</div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = ''; // You'll need to get a free API key from OpenWeatherMap
+        const weatherInfo = document.getElementById('weatherInfo');
+        const weatherAnimation = document.getElementById('weatherAnimation');
+        const cityInput = document.getElementById('cityInput');
+        const body = document.body;
+
+        // Sample weather data for demonstration
+        const sampleWeatherData = {
+            'london': {
+                name: 'London',
+                main: { temp: 15, humidity: 65, pressure: 1013 },
+                weather: [{ main: 'Rain', description: 'light rain' }],
+                wind: { speed: 5.2 },
+                visibility: 8000
+            },
+            'tokyo': {
+                name: 'Tokyo',
+                main: { temp: 22, humidity: 70, pressure: 1015 },
+                weather: [{ main: 'Clear', description: 'clear sky' }],
+                wind: { speed: 3.1 },
+                visibility: 10000
+            },
+            'moscow': {
+                name: 'Moscow',
+                main: { temp: -5, humidity: 85, pressure: 1008 },
+                weather: [{ main: 'Snow', description: 'light snow' }],
+                wind: { speed: 4.5 },
+                visibility: 5000
+            },
+            'miami': {
+                name: 'Miami',
+                main: { temp: 28, humidity: 75, pressure: 1012 },
+                weather: [{ main: 'Thunderstorm', description: 'thunderstorm' }],
+                wind: { speed: 8.3 },
+                visibility: 7000
+            },
+            'sydney': {
+                name: 'Sydney',
+                main: { temp: 25, humidity: 60, pressure: 1016 },
+                weather: [{ main: 'Clouds', description: 'few clouds' }],
+                wind: { speed: 4.2 },
+                visibility: 9050
+            },    
+            'Lagos': {
+                name: 'Lagos',
+                main: { temp: 26, humidity: 78, pressure: 1014 },
+                weather: [{ main: 'Clouds', description: 'few clouds' }],
+                wind: { speed: 4.2 },
+                visibility: 9000
+            }
+        };
+
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = cityInput.value.trim().toLowerCase();
+                if (city) {
+                    getWeatherData(city);
+                }
+            }
+        });
+
+        async function getWeatherData(city) {
+            weatherInfo.innerHTML = '<div class="loading">Loading weather data...</div>';
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Use sample data for demonstration
+            const data = sampleWeatherData[city];
+            
+            if (data) {
+                displayWeatherData(data);
+            } else {
+                weatherInfo.innerHTML = '<div class="loading">City not found. Try: London, Tokyo, Moscow, Miami, or Sydney</div>';
+            }
+        }
+
+        function displayWeatherData(data) {
+            const temp = Math.round(data.main.temp);
+            const weatherMain = data.weather[0].main.toLowerCase();
+            
+            weatherInfo.innerHTML = `
+                <div class="city-name">${data.name}</div>
+                <div class="temperature">${temp}°C</div>
+                <div class="weather-description">${data.weather[0].description}</div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Humidity</div>
+                        <div class="detail-value">${data.main.humidity}%</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Wind Speed</div>
+                        <div class="detail-value">${data.wind.speed} m/s</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Pressure</div>
+                        <div class="detail-value">${data.main.pressure} hPa</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Visibility</div>
+                        <div class="detail-value">${data.visibility / 1000} km</div>
+                    </div>
+                </div>
+            `;
+            
+            updateWeatherAnimation(weatherMain);
+            updateBackground(weatherMain);
+        }
+
+        function updateBackground(weather) {
+            // Remove all weather classes
+            body.classList.remove('sunny', 'cloudy', 'rainy', 'snowy', 'stormy');
+            
+            // Add appropriate class based on weather
+            if (weather.includes('clear')) {
+                body.classList.add('sunny');
+            } else if (weather.includes('cloud')) {
+                body.classList.add('cloudy');
+            } else if (weather.includes('rain')) {
+                body.classList.add('rainy');
+            } else if (weather.includes('snow')) {
+                body.classList.add('snowy');
+            } else if (weather.includes('thunderstorm')) {
+                body.classList.add('stormy');
+            }
+        }
+
+        function updateWeatherAnimation(weather) {
+            weatherAnimation.innerHTML = '';
+            
+            if (weather.includes('rain')) {
+                createRainAnimation();
+            } else if (weather.includes('snow')) {
+                createSnowAnimation();
+            } else if (weather.includes('clear')) {
+                createStarsAnimation();
+            } else if (weather.includes('cloud')) {
+                createCloudsAnimation();
+            } else if (weather.includes('thunderstorm')) {
+                createThunderstormAnimation();
+            }
+        }
+
+        function createRainAnimation() {
+            for (let i = 0; i < 100; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDelay = Math.random() * 1 + 's';
+                drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                weatherAnimation.appendChild(drop);
+            }
+        }
+
+        function createSnowAnimation() {
+            const snowflakes = ['❄', '❅', '❆'];
+            for (let i = 0; i < 50; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snow-flake';
+                flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                flake.style.left = Math.random() * 100 + '%';
+                flake.style.animationDelay = Math.random() * 3 + 's';
+                flake.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                weatherAnimation.appendChild(flake);
+            }
+        }
+
+        function createStarsAnimation() {
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                weatherAnimation.appendChild(star);
+            }
+        }
+
+        function createCloudsAnimation() {
+            for (let i = 0; i < 3; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = `cloud cloud-1`;
+                cloud.style.top = Math.random() * 50 + '%';
+                cloud.style.animationDelay = Math.random() * 5 + 's';
+                cloud.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                weatherAnimation.appendChild(cloud);
+            }
+        }
+
+        function createThunderstormAnimation() {
+            createRainAnimation();
+            
+            // Add lightning flashes
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    const lightning = document.createElement('div');
+                    lightning.className = 'lightning';
+                    weatherAnimation.appendChild(lightning);
+                    
+                    setTimeout(() => {
+                        lightning.remove();
+                    }, 100);
+                }
+            }, 2000);
+        }
+
+        // Initialize with a default city
+        setTimeout(() => {
+            getWeatherData('london');
+        }, 1000);
+    </script>
+</body>
+</html>
